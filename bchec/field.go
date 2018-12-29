@@ -55,6 +55,7 @@ package bchec
 // counts.
 
 import (
+	"crypto/subtle"
 	"encoding/hex"
 )
 
@@ -307,9 +308,10 @@ func (f *fieldVal) Normalize() *fieldVal {
 	//
 	// Note that 'm' will be zero when neither of the aforementioned conditions
 	// are true and the value will not be changed when 'm' is zero.
-	m = isZeroUint32((t9 - fieldMSBMask) | (t2&t3&t4&t5&t6&t7&t8 - fieldBaseMask))
-	m &= lessThanUint32(fieldBaseMask, (t0+977)>>fieldBase+t1+64)
-	m |= notZeroUint32(t9 >> fieldMSBBits)
+	m = uint32(subtle.ConstantTimeEq(int32(t9), fieldMSBMask))
+	m &= uint32(subtle.ConstantTimeEq(int32(t2&t3&t4&t5&t6&t7&t8), fieldBaseMask))
+	m &= uint32(subtle.ConstantTimeLessOrEq(1<<fieldBase, int((t0+977)>>fieldBase+t1+64)))
+	m |= uint32(subtle.ConstantTimeEq(int32(t9>>fieldMSBBits), 1))
 	t0 = t0 + m*977
 	t1 = (t0 >> fieldBase) + t1 + (m << 6)
 	t0 = t0 & fieldBaseMask
